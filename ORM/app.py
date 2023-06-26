@@ -6,6 +6,8 @@ from table_post import Post
 from table_user import User
 from table_feed import Feed
 from typing import List
+from dotenv import load_dotenv
+import uvicorn
 
 app = FastAPI()
 
@@ -48,12 +50,15 @@ def feed_post(id: int = None, limit: int = 10) -> List[FeedGet]:
 
 @app.get("/post/recommendations/", response_model=List[PostGet])
 def recommendations_post(id: int = None, limit: int = 10) -> List[PostGet]:
-    # result = SessionLocal().query(Feed.post_id, func.count(Feed.post_id))\
     result = SessionLocal().query(Post.id, Post.text, Post.topic).join(Feed) \
-        .filter(Feed.action == "like")\
-        .group_by(Post.id)\
+        .filter(Feed.action == "like") \
+        .group_by(Post.id) \
         .order_by(func.count(Post.id).desc()).limit(limit).all()
     if result is not None:
         return result
     else:
         raise HTTPException(200, [])
+
+
+if __name__ == "__main__":
+    uvicorn.run(app)
